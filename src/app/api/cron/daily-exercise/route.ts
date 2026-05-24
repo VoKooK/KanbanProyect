@@ -6,7 +6,15 @@ import { GoogleGenAI } from "@google/genai";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
+export async function GET(request: Request) {
+  return handleRequest(request);
+}
+
 export async function POST(request: Request) {
+  return handleRequest(request);
+}
+
+async function handleRequest(request: Request) {
   // 1. Authorization check
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET || "cron-secret-super-key-987654321-zyxwvuts";
@@ -16,7 +24,7 @@ export async function POST(request: Request) {
   }
 
   // 2. Validate API Key
-  if (!GEMINI_API_KEY || GEMINI_API_KEY === "tu_api_key_de_gemini") {
+  if (!GEMINI_API_KEY) {
     return NextResponse.json(
       { error: "API Key de Gemini no configurada. Por favor actualiza la variable GEMINI_API_KEY en tu .env" },
       { status: 500 }
