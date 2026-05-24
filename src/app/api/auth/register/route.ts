@@ -36,16 +36,28 @@ export async function POST(request: Request) {
         password: hashedPassword,
         name: name || null,
         boards: {
-          create: {
-            name: "Mi Tablero",
-            columns: {
-              create: [
-                { name: "Por Hacer", position: 0 },
-                { name: "En Progreso", position: 1 },
-                { name: "Terminado", position: 2 },
-              ],
+          create: [
+            {
+              name: "Mi Tablero",
+              columns: {
+                create: [
+                  { name: "Por Hacer", position: 0 },
+                  { name: "En Progreso", position: 1 },
+                  { name: "Terminado", position: 2 },
+                ],
+              },
             },
-          },
+            {
+              name: "Ejercicios de Programación",
+              columns: {
+                create: [
+                  { name: "Por Hacer", position: 0 },
+                  { name: "En Progreso", position: 1 },
+                  { name: "Terminado", position: 2 },
+                ],
+              },
+            },
+          ],
         },
       },
     });

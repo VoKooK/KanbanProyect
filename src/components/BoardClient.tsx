@@ -562,15 +562,17 @@ export default function BoardClient({ initialBoards, user }: BoardClientProps) {
                   <h1 className="text-lg md:text-2xl font-extrabold tracking-tight text-white">
                     {activeBoard.name}
                   </h1>
-                  <button
-                    onClick={() => {
-                      setTempBoardName(activeBoard.name);
-                      setEditingBoardName(true);
-                    }}
-                    className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all cursor-pointer"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
+                  {activeBoard.name !== "Ejercicios de Programación" && (
+                    <button
+                      onClick={() => {
+                        setTempBoardName(activeBoard.name);
+                        setEditingBoardName(true);
+                      }}
+                      className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all cursor-pointer"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -585,13 +587,15 @@ export default function BoardClient({ initialBoards, user }: BoardClientProps) {
                 <span className="hidden sm:inline">Actualizar</span>
               </button>
 
-              <button
-                onClick={handleDeleteBoard}
-                className="flex items-center gap-1.5 text-xs text-red-500/80 hover:text-red-400 border border-red-500/20 hover:border-red-500/40 bg-red-500/5 py-1.5 px-3 rounded-lg transition-all cursor-pointer font-semibold"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>Eliminar Tablero</span>
-              </button>
+              {activeBoard.name !== "Ejercicios de Programación" && (
+                <button
+                  onClick={handleDeleteBoard}
+                  className="flex items-center gap-1.5 text-xs text-red-500/80 hover:text-red-400 border border-red-500/20 hover:border-red-500/40 bg-red-500/5 py-1.5 px-3 rounded-lg transition-all cursor-pointer font-semibold"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Eliminar Tablero</span>
+                </button>
+              )}
             </div>
           </div>
         )}

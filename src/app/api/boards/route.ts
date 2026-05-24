@@ -100,6 +100,17 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "ID y nombre son obligatorios." }, { status: 400 });
     }
 
+    const board = await prisma.board.findFirst({
+      where: { id: boardId, userId: user.id }
+    });
+
+    if (board && board.name === "Ejercicios de Programación") {
+      return NextResponse.json(
+        { error: "No se puede renombrar el tablero de ejercicios predeterminado." },
+        { status: 400 }
+      );
+    }
+
     const updatedBoard = await prisma.board.updateMany({
       where: { id: boardId, userId: user.id },
       data: { name },
@@ -130,6 +141,17 @@ export async function DELETE(request: Request) {
   }
 
   try {
+    const board = await prisma.board.findFirst({
+      where: { id: boardId, userId: user.id }
+    });
+
+    if (board && board.name === "Ejercicios de Programación") {
+      return NextResponse.json(
+        { error: "No se puede eliminar el tablero de ejercicios predeterminado." },
+        { status: 400 }
+      );
+    }
+
     const deleted = await prisma.board.deleteMany({
       where: { id: boardId, userId: user.id },
     });
