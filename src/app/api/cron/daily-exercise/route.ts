@@ -48,56 +48,87 @@ export async function POST(request: Request) {
 
     const exercise = JSON.parse(text);
 
-    // 4. Find target column in the database (e.g. To Do, Backlog, or fall back to any first column)
-    let targetColumn = await prisma.column.findFirst({
-      where: {
-        name: {
-          in: ["To Do", "Backlog", "Por hacer", "Pendiente", "Pendientes", "Tareas", "Inbox"],
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    });
-
-    if (!targetColumn) {
-      // Fallback: Pick the first available column in the entire database
-      targetColumn = await prisma.column.findFirst({
-        orderBy: { position: "asc" },
+    // 4. Get all users in the database
+    const users = await prisma.user.findMany();
+    if (users.length === 0) {
+      return NextResponse.json({
+        success: true,
+        message: "No hay usuarios en la base de datos para generar ejercicios.",
+        tasksCreated: 0
       });
     }
 
-    if (!targetColumn) {
-      return NextResponse.json(
-        { error: "No se encontraron columnas en la base de datos. Por favor crea un tablero y al menos una columna primero." },
-        { status: 404 }
-      );
+    const createdTasksInfo = [];
+
+    // 5. For each user, find or create the default board and insert the exercise
+    for (const user of users) {
+      let board = await prisma.board.findFirst({
+        where: {
+          name: "Ejercicios de Programación",
+          userId: user.id,
+        },
+        include: {
+          columns: {
+            orderBy: { position: "asc" },
+          },
+        },
+      });
+
+      // If the default board does not exist, create it with default columns
+      if (!board) {
+        board = await prisma.board.create({
+          data: {
+            name: "Ejercicios de Programación",
+            userId: user.id,
+            columns: {
+              create: [
+                { name: "Por Hacer", position: 0 },
+                { name: "En Progreso", position: 1 },
+                { name: "Terminado", position: 2 },
+              ],
+            },
+          },
+          include: {
+            columns: {
+              orderBy: { position: "asc" },
+            },
+          },
+        });
+      }
+
+      // Find the first column (ideally "Por Hacer")
+      const targetColumn = board.columns.find((c) => c.name === "Por Hacer") || board.columns[0];
+      if (!targetColumn) continue;
+
+      // Calculate position for the new task in this column
+      const highestTask = await prisma.task.findFirst({
+        where: { columnId: targetColumn.id },
+        orderBy: { position: "desc" },
+      });
+
+      const newPosition = highestTask ? highestTask.position + 1 : 0;
+
+      // Create the task for this user
+      const newTask = await prisma.task.create({
+        data: {
+          title: `🎯 Ejercicio Diario: ${exercise.title}`,
+          description: exercise.description,
+          columnId: targetColumn.id,
+          position: newPosition,
+        },
+      });
+
+      createdTasksInfo.push({
+        userId: user.id,
+        taskId: newTask.id,
+        title: newTask.title,
+      });
     }
-
-    // 5. Calculate position for the new task (put it at the top of the column)
-    const highestTask = await prisma.task.findFirst({
-      where: { columnId: targetColumn.id },
-      orderBy: { position: "desc" },
-    });
-
-    const newPosition = highestTask ? highestTask.position + 1 : 0;
-
-    // 6. Create the task in the database
-    const newTask = await prisma.task.create({
-      data: {
-        title: `🎯 Ejercicio Diario: ${exercise.title}`,
-        description: exercise.description,
-        columnId: targetColumn.id,
-        position: newPosition,
-      },
-    });
 
     return NextResponse.json({
       success: true,
-      message: "Ejercicio diario generado con éxito",
-      task: {
-        id: newTask.id,
-        title: newTask.title,
-        columnId: newTask.columnId,
-      },
+      message: `Ejercicio diario generado con éxito para ${createdTasksInfo.length} usuario(s).`,
+      tasks: createdTasksInfo,
     });
   } catch (error: any) {
     console.error("Error en la ruta del Cron:", error);

@@ -26,12 +26,19 @@ async function runIntegrationTest() {
       if (response.ok && json.success) {
         console.log("\n🎉 ¡PRUEBA EXITOSA!");
         console.log("-----------------------------------------------------------------");
-        console.log(`ID Tarea:     ${json.task.id}`);
-        console.log(`Título Tarea: ${json.task.title}`);
-        console.log(`Columna ID:   ${json.task.columnId}`);
+        console.log(`Mensaje:        ${json.message}`);
+        console.log(`Tareas creadas: ${json.tasks ? json.tasks.length : 0}`);
+        if (json.tasks && json.tasks.length > 0) {
+          json.tasks.forEach((t: any, index: number) => {
+            console.log(`\n[Usuario ${index + 1}]`);
+            console.log(`- ID Usuario: ${t.userId}`);
+            console.log(`- ID Tarea:   ${t.taskId}`);
+            console.log(`- Título:     ${t.title}`);
+          });
+        }
         console.log("-----------------------------------------------------------------");
         console.log("Ve a tu tablero en el navegador (http://localhost:3000/kanban).");
-        console.log("Verás el nuevo ejercicio de programación creado por Gemini al principio de la columna.");
+        console.log("Verás el nuevo tablero 'Ejercicios de Programación' con la tarea al principio de la columna.");
       } else {
         console.log("\n❌ LA API RETORNÓ UN ERROR:");
         console.log(json.error || json);

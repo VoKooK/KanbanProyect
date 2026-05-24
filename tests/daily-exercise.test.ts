@@ -9,7 +9,7 @@ process.env.CRON_SECRET = "mocked-cron-secret";
 import { prisma } from "../src/lib/prisma";
 import { GoogleGenAI } from "@google/genai";
 
-// 1. Mock GoogleGenAI models.generateContentInternal method on prototype via direct assignment
+// 1. Mock GoogleGenAI models.generateContentInternal method on prototype
 const dummyAI = new GoogleGenAI({ apiKey: "mocked-key" });
 const modelsProto = Object.getPrototypeOf(dummyAI.models);
 modelsProto.generateContentInternal = async () => {
@@ -22,14 +22,20 @@ modelsProto.generateContentInternal = async () => {
 };
 
 // 2. Mock Prisma client methods via direct assignment
-prisma.column.findFirst = (async () => {
+prisma.user.findMany = (async () => {
+  return [
+    { id: "user-123", email: "test@example.com", name: "Test User" }
+  ];
+}) as any;
+
+prisma.board.findFirst = (async () => {
   return {
-    id: "column-todo-id",
-    name: "To Do",
-    position: 0,
-    boardId: "board-123",
-    createdAt: new Date(),
-    updatedAt: new Date()
+    id: "board-123",
+    name: "Ejercicios de Programación",
+    userId: "user-123",
+    columns: [
+      { id: "column-todo-id", name: "Por Hacer", position: 0 }
+    ]
   };
 }) as any;
 
@@ -80,7 +86,9 @@ test("Daily Exercise API Route - Success Flow", async () => {
   // Assert response status and structure
   assert.strictEqual(response.status, 200);
   assert.strictEqual(json.success, true);
-  assert.strictEqual(json.task.title, "🎯 Ejercicio Diario: Invertir un Árbol Binario");
+  assert.strictEqual(json.tasks.length, 1);
+  assert.strictEqual(json.tasks[0].title, "🎯 Ejercicio Diario: Invertir un Árbol Binario");
+  assert.strictEqual(json.tasks[0].userId, "user-123");
 
   // Assert database insert was called with expected parameters
   assert.strictEqual(createdTasks.length, 1);
