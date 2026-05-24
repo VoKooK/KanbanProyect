@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   LayoutDashboard, Plus, Trash2, Edit2, LogOut, Check, X, 
-  FileText, Calendar, PlusCircle, User, Loader2, GripVertical
+  FileText, Calendar, PlusCircle, User, Loader2, GripVertical,
+  RotateCw
 } from "lucide-react";
 
 interface Task {
@@ -70,6 +71,8 @@ export default function BoardClient({ initialBoards, user }: BoardClientProps) {
   const [editTaskTitle, setEditTaskTitle] = useState("");
   const [editTaskDescription, setEditTaskDescription] = useState("");
 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   // Fetch active board details
   useEffect(() => {
     if (!activeBoardId) {
@@ -77,8 +80,8 @@ export default function BoardClient({ initialBoards, user }: BoardClientProps) {
       return;
     }
 
-    const fetchBoardDetails = async () => {
-      setLoadingBoard(true);
+    const fetchBoardDetails = async (showLoading = true) => {
+      if (showLoading) setLoadingBoard(true);
       try {
         const res = await fetch(`/api/boards?boardId=${activeBoardId}`);
         if (res.ok) {
@@ -88,12 +91,20 @@ export default function BoardClient({ initialBoards, user }: BoardClientProps) {
       } catch (err) {
         console.error("Error fetching board details:", err);
       } finally {
-        setLoadingBoard(false);
+        if (showLoading) setLoadingBoard(false);
       }
     };
 
-    fetchBoardDetails();
-  }, [activeBoardId]);
+    // Initial fetch with loader spinner
+    fetchBoardDetails(true);
+
+    // Auto-refresh in background every 5 seconds without showing spinner
+    const interval = setInterval(() => {
+      fetchBoardDetails(false);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [activeBoardId, refreshTrigger]);
 
   // Handle Logout
   const handleLogout = async () => {
@@ -564,13 +575,24 @@ export default function BoardClient({ initialBoards, user }: BoardClientProps) {
               )}
             </div>
 
-            <button
-              onClick={handleDeleteBoard}
-              className="flex items-center gap-1.5 text-xs text-red-500/80 hover:text-red-400 border border-red-500/20 hover:border-red-500/40 bg-red-500/5 py-1.5 px-3 rounded-lg transition-all cursor-pointer font-semibold"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Eliminar Tablero</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setRefreshTrigger(prev => prev + 1)}
+                className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 hover:border-indigo-500/40 bg-indigo-500/5 py-1.5 px-3 rounded-lg transition-all cursor-pointer font-semibold"
+                title="Actualizar Tablero"
+              >
+                <RotateCw className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Actualizar</span>
+              </button>
+
+              <button
+                onClick={handleDeleteBoard}
+                className="flex items-center gap-1.5 text-xs text-red-500/80 hover:text-red-400 border border-red-500/20 hover:border-red-500/40 bg-red-500/5 py-1.5 px-3 rounded-lg transition-all cursor-pointer font-semibold"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Eliminar Tablero</span>
+              </button>
+            </div>
           </div>
         )}
 
