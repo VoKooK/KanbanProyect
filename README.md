@@ -23,13 +23,13 @@ Un tablero Kanban premium, altamente interactivo y responsivo construido con tec
    ```
 
 2. **Configurar el entorno:**
-   Crea un archivo `.env` en la raíz del proyecto (ya configurado) con el siguiente contenido:
+   Crea un archivo `.env` en la raíz del proyecto con las siguientes variables de configuración:
    ```env
    # Ruta de conexión SQLite
    DATABASE_URL="file:./dev.db"
 
-   # Clave secreta para tokens JWT
-   JWT_SECRET="super-secret-kanban-key-123456789-abcdefg"
+   # Clave secreta de al menos 32 caracteres para firmar tokens JWT de forma segura
+   JWT_SECRET="tu_clave_secreta_aqui_generada_de_forma_segura"
    ```
 
 3. **Inicializar la base de datos:**
